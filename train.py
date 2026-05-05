@@ -42,7 +42,7 @@ targets_batch = targets_batch.to(device)
 model = KCONDE_FCC(hidden_size=128).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 loss_fn = nn.MSELoss()
-epochs = 500
+epochs = 1500
 for epoch in range(epochs):
     optimizer.zero_grad()
     # Интегрируем весь батч за один раз

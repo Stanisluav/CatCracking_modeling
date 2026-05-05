@@ -20,7 +20,7 @@ def rmse(y_true, y_pred):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = KCONDE_FCC().to(device)
-model.load_state_dict(torch.load('kconde_fast.pth', map_location=device))
+model.load_state_dict(torch.load('kconde.pth', map_location=device))
 model.eval()
 
 experiments = load_experimental_data()
