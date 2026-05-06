@@ -4,17 +4,7 @@ import numpy as np
 import argparse
 
 from dataset import load_experimental_data, denormalize_concentrations
-
-#==============================================================
-# Расчет метрик
-#==============================================================
-def r2_score(y_true, y_pred):
-    ss_res = np.sum((y_true - y_pred) ** 2)
-    ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
-    return 1 - (ss_res / ss_tot) if ss_tot != 0 else 0.0
-
-def rmse(y_true, y_pred):
-    return np.sqrt(np.mean((y_true - y_pred) ** 2))
+from utils import r2_score, rmse
 
 #==============================================================
 # Парсер аргументов

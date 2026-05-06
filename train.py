@@ -3,6 +3,8 @@ import torch.nn as nn
 import argparse
 import numpy as np
 from sklearn.model_selection import train_test_split
+
+from utils import compute_metrics
 from dataset import load_experimental_data, normalize_concentrations, denormalize_concentrations
 
 parser = argparse.ArgumentParser()
@@ -92,14 +94,6 @@ loss_fn = nn.MSELoss()
 best_val_loss = float('inf')
 best_model_path = f'kconde_{args.model}_best.pth'
 
-def compute_metrics(y_pred, y_true):
-    with torch.no_grad():
-        mse = loss_fn(y_pred, y_true)
-        y_pred_pct = y_pred * 100.0
-        y_true_pct = y_true * 100.0
-        rmse_pct = torch.sqrt(torch.mean((y_pred_pct - y_true_pct)**2))
-        mae_pct = torch.mean(torch.abs(y_pred_pct - y_true_pct))
-    return mse.item(), rmse_pct.item(), mae_pct.item()
 
 print("Start training...")
 for epoch in range(args.epochs):
