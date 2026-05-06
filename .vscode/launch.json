@@ -15,19 +15,19 @@
             "program": "plot.py",
             "console": "integratedTerminal",
             "args": [
-                "--model=strict",
-                "--checkpoint=kconde_strict.pth"
+                "--model=flexible",
+                "--checkpoint=kconde_flexible_final.pth"
             ]
         },
         {
-            "name": "Train kconde",
+            "name": "Train neuralODE",
             "type": "debugpy",
             "request": "launch",
             "program": "train.py",
             "console": "integratedTerminal",
             "args": [
                 "--model=flexible", 
-                "--epochs=500",
+                "--epochs=1000",
                 "--lr=0.001"
             ]
         },

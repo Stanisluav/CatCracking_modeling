@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 
 if args.model == 'flexible':
-    from kconde_model import KCONDE_FCC
+    from neuralODE_model import KCONDE_FCC
     model_class = KCONDE_FCC
     hidden_size = args.hidden if args.hidden is not None else 128
     normalize_T = True   # в flexible модели T нормируется ( (T-500)/100 )
@@ -111,7 +111,7 @@ for epoch in range(args.epochs):
         with torch.no_grad():
             y_pred_val = model.integrate_batch(C0_val, t_s_val, C_O_val, T_val)
             mse_val, rmse_pct, mae_pct = compute_metrics(y_pred_val, targets_val)
-            print(f"Epoch {epoch+1:4d}/{args.epchs}, Train Loss: {loss_train.item():.6f} |"
+            print(f"Epoch {epoch+1:4d}/{args.epochs}, Train Loss: {loss_train.item():.6f} |"
                   f"Val Loss: {mse_val:.6f} | Val RMSE(%) : {rmse_pct:.2f} | Val MAE(%) : {mae_pct:.2f}")
 
 torch.save(model.state_dict(), f'kconde_{args.model}_final.pth')

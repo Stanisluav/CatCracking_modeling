@@ -18,9 +18,10 @@ def rmse(y_true, y_pred):
 # Function for validation (val loss, MSE, MAE)
 def compute_metrics(y_pred, y_true):
     with torch.no_grad():
-        mse = nn.MSELoss(y_pred, y_true)
+        loss_fn = nn.MSELoss()
+        mse = loss_fn(y_pred, y_true)
         y_pred_pct = y_pred * 100.0
         y_true_pct = y_true * 100.0
-        rmse_pct = rmse(y_true_pct, y_pred_pct)
+        rmse_pct = rmse(y_true_pct.cpu().numpy(), y_pred_pct.cpu().numpy())
         mae_pct = torch.mean(torch.abs(y_pred_pct - y_true_pct))
     return mse.item(), rmse_pct.item(), mae_pct.item()

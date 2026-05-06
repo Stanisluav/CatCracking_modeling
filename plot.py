@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.model == 'flexible':
-    from kconde_model import KCONDE_FCC
+    from neuralODE_model import KCONDE_FCC
     model = KCONDE_FCC().to(device)
     checkpoint = args.checkpoint if args.checkpoint else 'kconde_flexible.pth'
     normalize_T = True

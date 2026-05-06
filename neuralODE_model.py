@@ -13,7 +13,7 @@ class KCONDE_FCC(nn.Module):
             nn.Linear(hidden_size, n_reactions),
             nn.Softplus()  # положительные скорости
         )
-        self.beta = nn.Parameter(torch.tensor(0.05), requires_grad=True)  # теперь обучаемый
+        self.beta = nn.Parameter(torch.tensor(0.05), requires_grad=True)
 
     def predict_rates(self, y, C_O, T):
         # y: (batch, 5), C_O и T: скаляры или тензоры (batch,1)
@@ -41,14 +41,14 @@ class KCONDE_FCC(nn.Module):
         def ode_func(t, y):
             # y: (batch, 5)
             rates = self.predict_rates(y, self._C_O, self._T)  # (batch,6)
-            v1,v2,v3,v4,v5,v6 = rates.unbind(dim=1)
+            k1,k2,k3,k4,k5,k6 = rates.unbind(dim=1)
             phi = torch.exp(-self.beta * t)
             C_VGO, C_LCO, C_gas, C_light, C_coke = y.unbind(dim=1)
-            dVGO = -(v1+v2+v3+v4) * (C_VGO**2) * phi
-            dLCO = (v1 * (C_VGO**2) - v5 * C_LCO) * phi
-            dGas = (v2 * (C_VGO**2) + v5 * C_LCO - v6 * C_gas) * phi
-            dLight = (v3 * (C_VGO**2) + v6 * C_gas) * phi
-            dCoke = (v4 * (C_VGO**2)) * phi
+            dVGO = -(k1+k2+k3+k4) * (C_VGO**2) * phi
+            dLCO = (k1 * (C_VGO**2) - k5 * C_LCO) * phi
+            dGas = (k2 * (C_VGO**2) + k5 * C_LCO - k6 * C_gas) * phi
+            dLight = (k3 * (C_VGO**2) + k6 * C_gas) * phi
+            dCoke = (k4 * (C_VGO**2)) * phi
             return torch.stack([dVGO, dLCO, dGas, dLight, dCoke], dim=1)
         
         max_t = t_final_batch.max().item()
