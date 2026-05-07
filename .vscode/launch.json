@@ -16,7 +16,8 @@
             "console": "integratedTerminal",
             "args": [
                 "--model=flexible",
-                "--checkpoint=kconde_flexible_final.pth"
+                "--checkpoint=kconde_flexible_final.pth",
+                "--hidden=128"
             ]
         },
         {
@@ -27,8 +28,9 @@
             "console": "integratedTerminal",
             "args": [
                 "--model=flexible", 
-                "--epochs=1000",
-                "--lr=0.001"
+                "--epochs=1500",
+                "--lr=0.001",
+                "--hidden=128"
             ]
         },
         {

@@ -6,30 +6,26 @@ import argparse
 from dataset import load_experimental_data, denormalize_concentrations
 from utils import r2_score, rmse
 
-#==============================================================
-# Парсер аргументов
-#==============================================================
 parser = argparse.ArgumentParser(description='Validate KCONDE model for FCC')
-parser.add_argument('--model', type=str, default='flexible', choices=['flexible', 'strict'],
-                    help='Model type: flexible or strict')
+parser.add_argument('--model', type=str, default='flexible')
 parser.add_argument('--checkpoint', type=str, default=None,
                     help='Path to model checkpoint (default: kconde_flexible.pth or kconde_strict.pth)')
+parser.add_argument('--hidden', type=int, default=None,
+                    help='Hidden layer size (must match the trained model)')
 args = parser.parse_args()
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 if args.model == 'flexible':
     from neuralODE_model import KCONDE_FCC
-    model = KCONDE_FCC().to(device)
+    hidden_size = args.hidden if args.hidden is not None else 128
+    model = KCONDE_FCC(hidden_size=hidden_size).to(device)
     checkpoint = args.checkpoint if args.checkpoint else 'kconde_flexible.pth'
     normalize_T = True
 else:
-    from kconde_strict import KCONDE_Strict
-    model = KCONDE_Strict(hidden_size=12).to(device)  # hidden_size должен совпадать с обученным
-    checkpoint = args.checkpoint if args.checkpoint else 'kconde_strict.pth'
-    normalize_T = False
+    pass
+    # Пока только одна модель
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.load_state_dict(torch.load(checkpoint, map_location=device))
 model.eval()
 
@@ -48,14 +44,11 @@ if normalize_T:
 else:
     T_t = torch.tensor([t + 273.15 for t in T_C_list], dtype=torch.float32).to(device)
 
-
 C0 = torch.zeros(len(experiments), 5).to(device)
 C0[:, 0] = 1.0
 
-
 with torch.no_grad():
     pred_norm = model.integrate_batch(C0, t_s_t, C_O_t, T_t)
-    # denormalize_concentrations переводит из [0,1] в проценты
     pred = denormalize_concentrations(pred_norm.cpu().numpy())
 
 names = ['VGO', 'LCO', 'Gasoline', 'Light gases', 'Coke']

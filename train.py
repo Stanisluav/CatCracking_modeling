@@ -8,12 +8,10 @@ from utils import compute_metrics
 from dataset import load_experimental_data, normalize_concentrations, denormalize_concentrations
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default='flexible', choices=['flexible', 'strict'],
-                    help='Model type: flexible (original KCONDE_FCC) or strict (Kinetics-Constrained)')
+parser.add_argument('--model', type=str, default='flexible')
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
 parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
-parser.add_argument('--hidden', type=int, default=None, 
-                    help='Hidden layer size (if None, default: 128 for flexible, 12 for strict)')
+parser.add_argument('--hidden', type=int, default=16)
 parser.add_argument('--val_split', type=float, default=0.1, help='Validation split ratio')
 args = parser.parse_args()
 
@@ -22,12 +20,10 @@ if args.model == 'flexible':
     from neuralODE_model import KCONDE_FCC
     model_class = KCONDE_FCC
     hidden_size = args.hidden if args.hidden is not None else 128
-    normalize_T = True   # в flexible модели T нормируется ( (T-500)/100 )
+    normalize_T = True   # T нормируется ( (T-500)/100 )
 else:
-    from kconde_strict import KCONDE_Strict
-    model_class = KCONDE_Strict
-    hidden_size = args.hidden if args.hidden is not None else 12
-    normalize_T = False  # в strict модели T в Кельвинах
+    pass
+    # Возмлжно позже будут другие архитектуры
 
 print(f"Training {args.model} model | hidden_size={hidden_size} | epochs={args.epochs} | lr={args.lr}")
 
