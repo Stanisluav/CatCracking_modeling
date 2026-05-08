@@ -24,8 +24,7 @@ class KCONDE_FCC(nn.Module):
             nn.Softplus()
         )
 
-        # Параметр дезактивации (можно оставить обучаемым)
-        self.beta = nn.Parameter(torch.tensor(0.05), requires_grad=True)
+        self.gamma = nn.Parameter(torch.tensor(0.05), requires_grad=True)
 
     def get_rate_constants(self, T):
         T_K = T + 273.15
@@ -70,16 +69,15 @@ class KCONDE_FCC(nn.Module):
             v5 = effective_rates[:, 4]
             v6 = effective_rates[:, 5]
 
-            # Дезактивация
-            exp_beta_t = torch.exp(-self.beta * t)
-
             C_VGO, C_LCO, C_gas, C_light, C_coke = y.unbind(dim=1)
 
-            dVGO = -(v1 + v2 + v3 + v4) * (C_VGO ** 2) * exp_beta_t
-            dLCO = (v1 * (C_VGO ** 2) - v5 * C_LCO) * exp_beta_t
-            dGas = (v2 * (C_VGO ** 2) + v5 * C_LCO - v6 * C_gas) * exp_beta_t
-            dLight = (v3 * (C_VGO ** 2) + v6 * C_gas) * exp_beta_t
-            dCoke = (v4 * (C_VGO ** 2)) * exp_beta_t
+            exp_gamma_t = torch.exp(-self.gamma * C_coke)
+
+            dVGO = -(v1 + v2 + v3 + v4) * (C_VGO ** 2) * exp_gamma_t
+            dLCO = (v1 * (C_VGO ** 2) - v5 * C_LCO) * exp_gamma_t
+            dGas = (v2 * (C_VGO ** 2) + v5 * C_LCO - v6 * C_gas) * exp_gamma_t
+            dLight = (v3 * (C_VGO ** 2) + v6 * C_gas) * exp_gamma_t
+            dCoke = (v4 * (C_VGO ** 2)) * exp_gamma_t
             return torch.stack([dVGO, dLCO, dGas, dLight, dCoke], dim=1)
 
         max_t = t_final_batch.max().item()
