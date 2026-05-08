@@ -28,22 +28,9 @@
             "console": "integratedTerminal",
             "args": [
                 "--model=flexible", 
-                "--epochs=1500",
+                "--epochs=2500",
                 "--lr=0.001",
                 "--hidden=128"
-            ]
-        },
-        {
-            "name": "Train kconde_strict",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "train.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--model=strict", 
-                "--epochs=1000", 
-                "--lr=0.001", 
-                "--hidden=12"
             ]
         }
     ]
