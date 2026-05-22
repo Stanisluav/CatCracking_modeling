@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from utils import compute_metrics
+from utils import compute_metrics, r2_score, rmse
 from dataset import load_experimental_data, normalize_concentrations, denormalize_concentrations
 
 parser = argparse.ArgumentParser()
@@ -13,6 +13,7 @@ parser.add_argument('--epochs', type=int, default=500, help='Number of training 
 parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
 parser.add_argument('--hidden', type=int, default=16)
 parser.add_argument('--val_split', type=float, default=0.1, help='Validation split ratio')
+parser.add_argument('--checkpoint', type=str, default=None, help='Path to pretrained model weights')
 args = parser.parse_args()
 
 
@@ -84,12 +85,14 @@ T_val = T_val.to(device)
 targets_val = targets_val.to(device)
 
 model = model_class(hidden_size=hidden_size).to(device)
+if args.checkpoint is not None:
+    model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+    print(f"Loaded pretrained weights from {args.checkpoint}")
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 loss_fn = nn.MSELoss()
 
 best_val_loss = float('inf')
 best_model_path = f'kconde_{args.model}_best.pth'
-
 
 print("Start training...")
 for epoch in range(args.epochs):
@@ -100,16 +103,29 @@ for epoch in range(args.epochs):
     loss_train.backward()
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     optimizer.step()
-    
 
     if (epoch + 1) % 10 == 0:
         model.eval()
         with torch.no_grad():
             y_pred_val = model.integrate_batch(C0_val, t_s_val, C_O_val, T_val)
             mse_val, rmse_pct, mae_pct = compute_metrics(y_pred_val, targets_val)
-            print(f"Epoch {epoch+1:4d}/{args.epochs}, Train Loss: {loss_train.item():.6f} |"
-                  f"Val Loss: {mse_val:.6f} | Val RMSE(%) : {rmse_pct:.2f} | Val MAE(%) : {mae_pct:.2f}")
 
+            y_pred_denorm = denormalize_concentrations(y_pred_val.cpu().numpy())
+            y_true_denorm = denormalize_concentrations(targets_val.cpu().numpy())
+            
+            component_names = ['VGO', 'LCO', 'Gasoline', 'Light gases', 'Coke']
+            r2_list = []
+            for i, name in enumerate(component_names):
+                r2_i = r2_score(y_true_denorm[:, i], y_pred_denorm[:, i])
+                r2_list.append(r2_i)
+
+            avg_r2 = np.mean(r2_list)
+
+            print(f"Epoch {epoch+1:4d}/{args.epochs}, Train Loss: {loss_train.item():.6f} |"
+                  f"Val Loss: {mse_val:.6f} | Val RMSE(%): {rmse_pct:.2f} | Val MAE(%): {mae_pct:.2f}")
+            print(f"  Val R²: VGO={r2_list[0]:.3f}, LCO={r2_list[1]:.3f}, Gasoline={r2_list[2]:.3f}, "
+                  f"Light gases={r2_list[3]:.3f}, Coke={r2_list[4]:.3f} | Avg R²={avg_r2:.3f}")
+            
 torch.save(model.state_dict(), f'kconde_{args.model}_final.pth')
 print(f"Training finished. Final model saved as kconde_{args.model}_final.pth")
 print(f"Best model saved as {best_model_path} with val loss = {best_val_loss:.6f}")
